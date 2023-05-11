@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bee</title>
+  <style>
+
+  </style>
+</head>
+<body>
+  <main id="container">
+    <header id="score">
+      Your score is <span id="score-category">Beginner</span> (<span id="score-total">0 points</span>). <span id="score-to-next-category">0 points</span> to <span id="next-category">Novice</span>, <span id="score-to-queen-bee">0 points</span> to <strong>Queen Bee</strong>.
+    </header>
+    <section id="game">
+      <div id="input">
+        <span id="feedback"></span>
+        <span id="current-word"></span>
+      </div>
+      <div id="buttons">
+        <button id="letter-1" class="letter">—</button>
+        <button id="letter-2" class="letter">—</button>
+        <button id="letter-3" class="letter">—</button>
+        <button id="letter-4" class="letter">—</button>
+        <button id="letter-5" class="letter">—</button>
+        <button id="letter-6" class="letter">—</button>
+        <button id="letter-7" class="letter">—</button>
+      </div>
+      <div id="actions">
+        <button id="delete" class="action-button">Delete</button>
+        <button id="shuffle" class="action-button">Shuffle</button>
+        <button id="submit" class="action-button">Submit</button>
+      </div>
+    </section>
+  </main>
+</body>
+<script>
+  const Constants = {
+    Api: {
+      Today: "https://freebee.fun/cgi-bin/today",
+    },
+    Maps: {
+      CategoryPercentageMap: {
+        "Newbie": 0.00,
+        "Novice": 0.02,
+        "Fine": 0.05,
+        "Skilled": 0.08,
+        "Excellent": 0.15,
+        "Superb": 0.25,
+        "Marvellous": 0.40,
+        "Outstanding": 0.50,
+        "Queen Bee": 0.70,
+      },
+      // 0-indexed
+      WordLengthScoreMap: [
+        0,
+        0,
+        0,
+        0,
+        1, // scoring starts at 4
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+      ]
+    }
+  };
+
+  const GameState = {};
+
+  const Bindings = {
+    Score: {
+      ScoreCategory: document.getElementById("score-category"),
+      ScoreTotal: document.getElementById("score-total"),
+      ScoreToNextCategory: document.getElementById("score-to-next-category"),
+      NextCategory: document.getElementById("next-category"),
+      ScoreToQueenBee: document.getElementById("score-to-queen-bee"),
+    },
+    Word: {
+      Feedback: document.getElementById("feedback"),
+      CurrentWord: document.getElementById("current-word"),
+    },
+    Interactive: {
+      Center: {
+        Element: document.getElementById("letter-4"),
+        Listener: undefined,
+      },
+      Letters: [
+        {
+          Element: document.getElementById("letter-1"),
+          Listener: undefined,
+        },
+        {
+          Element: document.getElementById("letter-2"),
+          Listener: undefined,
+        },
+        {
+          Element: document.getElementById("letter-3"),
+          Listener: undefined,
+        },
+        {
+          Element: document.getElementById("letter-5"),
+          Listener: undefined,
+        },
+        {
+          Element: document.getElementById("letter-6"),
+          Listener: undefined,
+        },
+        {
+          Element: document.getElementById("letter-7"),
+          Listener: undefined,
+        },
+      ],
+    },
+    Actions: {
+      Delete: {
+        Element: document.getElementById("delete"),
+        Listener: undefined,
+      },
+      Shuffle: {
+        Element: document.getElementById("shuffle"),
+        Listener: undefined,
+      },
+      Submit: {
+        Element: document.getElementById("submit"),
+        Listener: undefined,
+      },
+    }
+  };
+
+  // can tweak this to load from local storage
+  const load = async () => {
+    const localData = window.localStorage.getItem("GameState");
+
+    if (localData) {
+      Object.assign(GameState, JSON.parse(localData));
+    } else {
+      const response = await fetch(Constants.Api.Today);
+      const game = await response.json();
+
+      Object.assign(GameState, {
+        game,
+        score: 0,
+        currentWord: "",
+        feedback: "",
+        words: [],
+        CategoryPointsMap: Object.fromEntries(Object.entries(Constants.Maps.CategoryPercentageMap).map(([category, percentage]) => [category, Math.floor(percentage * game.total)])),
+      });
+    }
+  };
+
+  // can tweak this to save  to local storage
+  const save = async () => {
+    window.localStorage.setItem("GameState", JSON.stringify(GameState));
+  }
+
+  const updateDisplayState = () => {
+    let currentCategory = undefined;
+    let nextCategory = undefined;
+    let pointsToNextCategory = 0;
+    
+    for (const [category, points] of Object.entries(GameState.CategoryPointsMap)) {
+      if (points > GameState.score) {
+        nextCategory = category;
+        pointsToNextCategory = points - GameState.score;
+        break;
+      } else {
+        currentCategory = category;
+      }
+    };
+
+    Bindings.Score.ScoreCategory.textContent = currentCategory;
+    Bindings.Score.ScoreTotal.textContent = `${GameState.score} point${GameState.score === 1 ? "" : "s"}`;
+    Bindings.Score.ScoreToNextCategory.textContent = `${pointsToNextCategory} point${pointsToNextCategory === 1 ? "" : "s"}`;;
+    Bindings.Score.NextCategory.textContent = nextCategory;
+    Bindings.Score.ScoreToQueenBee.textContent = GameState.game.total - GameState.score;
+
+    Bindings.Word.Feedback.textContent = GameState.feedback;
+    Bindings.Word.CurrentWord.textContent = GameState.currentWord.toLocaleUpperCase();
+
+    save();
+  }
+
+  const updateButtonActions = () => {
+    const updateBinding = (binding, callback) => {
+      binding.Element.removeEventListener("click", binding.Listener);
+      binding.Listener = callback;
+      binding.Element.addEventListener("click", binding.Listener);
+    };
+
+    Bindings.Interactive.Center.Element.textContent = GameState.game.center.toLocaleUpperCase();
+    updateBinding(Bindings.Interactive.Center, () => {
+      if (GameState.feedback) {
+        GameState.currentWord = GameState.game.center;
+        GameState.feedback = "";
+      } else {
+        GameState.currentWord += GameState.game.center;
+      }
+      updateDisplayState();
+    });
+
+    for (const [index, letter] of GameState.game.letters.split("").entries()) {
+      Bindings.Interactive.Letters[index].Element.textContent = letter.toLocaleUpperCase();
+      updateBinding(Bindings.Interactive.Letters[index], () => {
+        if (GameState.feedback) {
+          GameState.currentWord = letter;
+          GameState.feedback = "";
+        } else {
+          GameState.currentWord += letter;
+        }
+        updateDisplayState();
+      });
+    };
+
+    updateBinding(Bindings.Actions.Delete, () => {
+      if (GameState.feedback) {
+        GameState.currentWord = "";
+        GameState.feedback = "";
+      } else {
+        GameState.currentWord = GameState.currentWord.slice(0, -1);
+      }
+      updateDisplayState();
+    });
+
+    updateBinding(Bindings.Actions.Shuffle, () => {
+      GameState.feedback = "Shuffle isn't supported yet.";
+      updateButtonActions();
+      updateDisplayState();
+    });
+
+    updateBinding(Bindings.Actions.Submit, () => {
+      const word = GameState.currentWord;
+
+      if (GameState.game.wordlist.includes(word)) {
+        if (GameState.words.includes(word)) {
+          GameState.feedback = "Word already found.";
+        } else {
+          const isPangram = `${GameState.game.letters}${GameState.game.center}`.split("").every(letter => word.includes(letter));
+          const score = Constants.Maps.WordLengthScoreMap[word.length] + (isPangram ? 7 : 0);
+          GameState.score += score;
+          GameState.feedback = `${isPangram ? "Pangram!" : "Nice!"} (${score} points)`;
+        }
+      } else {
+        if (word.length <= 3) {
+          GameState.feedback = "Word is too short.";
+        } else if (!word.includes(GameState.game.center)) {
+          GameState.feedback = "Center letter is missing.";
+        } else {
+          GameState.feedback = "Not a valid word.";
+        }
+      }
+
+      updateDisplayState();
+    });
+  }
+
+  const play = async () => {
+    await load();
+
+    updateButtonActions();
+    updateDisplayState();
+  };
+
+  play();
+</script>
+</html>
