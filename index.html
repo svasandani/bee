@@ -4,15 +4,355 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FFD339">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;900&display=swap" rel="stylesheet">
   <title>Bee</title>
   <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
 
+    :root {
+      --black: #000000;
+      --white: #ffffff;
+      --gray: #E5E5E5;
+      --yellow: #FFD339;
+    }
+
+    body {
+      display: grid;
+      place-content: center;
+
+      margin: 0;
+      padding: 0;
+
+      font-size: 1rem;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0;
+    }
+    h1 {
+      font-size: 1.375rem;
+      font-weight: 900;
+      line-height: 2rem;
+    }
+
+    .dialog {
+      appearance: none;
+      border: none;
+      outline: none;
+
+      margin: 0;
+      padding: 0;
+
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+
+      font-size: 0.75rem;
+    }
+    .dialog[open] {
+      display: flex;
+      flex-flow: column nowrap;
+    }
+
+    .two-pane {
+      max-height: 100%;
+      overflow: scroll;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .two-pane-pane {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: 1rem;
+    }
+    .two-pane-pane-inner span {
+      border-radius: 0.5rem;
+      padding: 0.375rem 0.5rem;
+      white-space: nowrap;
+    }
+
+    .button {
+      appearance: none;
+      border: none;
+      outline: none;
+
+      border-radius: 0.5rem;
+      color: var(--black);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.375rem 0.5rem;
+    }
+    .gray {
+      background-color: var(--gray);
+    }
+    .white {
+      background-color: var(--white);
+    }
+    .yellow {
+      background-color: var(--yellow);
+    }
+    .button.small {
+      font-size: 0.75rem;
+    }
+    .button svg {
+      display: block;
+    }
+
+    .nav {
+      width: 100%;
+      padding: 1rem;
+
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .icon-group {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    main#container {
+      width: 100vw;
+      height: 100vh;
+
+      display: flex;
+      flex-flow: column nowrap;
+    }
+
+    nav.nav {
+      background-color: var(--yellow);
+    }
+
+    header#score {
+      font-size: 0.75rem;
+      width: 100%;
+      padding: 1rem;
+
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    section#game {
+      width: 100%;
+      flex-grow: 1;
+
+      display: grid;
+      grid-template-rows: 2fr auto 3fr;
+    }
+
+    div#input {
+      position: relative;
+      
+      padding-bottom: 1rem;
+    }
+
+    span#feedback {
+      position: absolute;
+      left: 50%;
+      bottom: 3.5rem;
+
+      transform: translateX(-50%);
+
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    span#current-word {
+      position: absolute;
+      left: 50%;
+      bottom: 1rem;
+
+      transform: translateX(-50%);
+
+      font-size: 2rem;
+      line-height: 2rem;
+      font-weight: bold;
+
+      max-width: calc(100% - 2rem);
+      height: 2rem;
+      overflow: visible;
+      overflow-wrap: break-word;
+      text-align: center;
+    }
+    span#current-word::after {
+      content: "";
+
+      height: 2.5rem;
+      width: 0.2rem;
+      background-color: var(--yellow);
+
+      position: absolute;
+      right: -0.3rem;
+      top: 50%;
+      transform: translateY(-50%);
+
+      animation: pulse 1s step-end infinite;
+    }
+
+    div#buttons {
+      --height: 6rem;
+      --width: calc(var(--height) * 1.1547);
+
+      position: relative;
+      padding: 2rem 0;
+      height: calc(var(--height) * 4);
+    }
+
+    button.letter {
+      --gap: 0.5rem;
+      --offsetX: 0px;
+      --offsetY: 0px;
+
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+
+      transform: translate(calc(-50% + var(--offsetX)), calc(-50% + var(--offsetY)));
+      
+      width: var(--width);
+      height: var(--height);
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+
+      appearance: none;
+      border: none;
+      outline: none;
+
+      background-color: var(--gray);
+      cursor: pointer;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    button#letter-1 {
+      --offsetY: calc(-1 * (var(--height) + var(--gap)));
+    }
+    button#letter-2 {
+      --offsetY: calc(-0.5 * (var(--height) + var(--gap)));
+      --offsetX: calc(-0.75 * (var(--width) + var(--gap)));
+    }
+    button#letter-3 {
+      --offsetY: calc(0.5 * (var(--height) + var(--gap)));
+      --offsetX: calc(-0.75 * (var(--width) + var(--gap)));
+    }
+    button#letter-4 {
+      background-color: var(--yellow);
+    }
+    button#letter-5 {
+      --offsetY: calc(-0.5 * (var(--height) + var(--gap)));
+      --offsetX: calc(0.75 * (var(--width) + var(--gap)));
+    }
+    button#letter-6 {
+      --offsetY: calc(0.5 * (var(--height) + var(--gap)));
+      --offsetX: calc(0.75 * (var(--width) + var(--gap)));
+    }
+    button#letter-7 {
+      --offsetY: calc(1 * (var(--height) + var(--gap)));
+    }
+    
+    div#actions {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+
+      padding-top: 1rem;
+    }
+
+    div#actions-inner {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    #more-categories,
+    #yesterday-categories {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: 0.5rem;
+    }
+
+    #more-words,
+    #yesterday-words {
+      display: flex;
+      flex-flow: row wrap;
+      gap: 0.5rem;
+    }
+
+    #loader {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+
+      background-color: var(--yellow);
+
+      display: grid;
+      place-content: center;
+    }
+
+    #loader > div {
+      display: flex;
+      flex-flow: column nowrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <main id="container">
+    <nav class="nav">
+      <h1>BEE</h1>
+      <button id="yesterday-button" class="white button">Yesterday</button>
+    </nav>
     <header id="score">
-      Your score is <span id="score-category">Beginner</span> (<span id="score-total">0 points</span>). <span id="score-to-next-category">0 points</span> to <span id="next-category">Novice</span>, <span id="score-to-queen-bee">0 points</span> to <strong>Queen Bee</strong>.
+      <div class="icon-group">
+        <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13.75 16.125H6.25001M13.75 16.125C14.413 16.125 15.0489 16.3884 15.5178 16.8572C15.9866 17.3261 16.25 17.962 16.25 18.625H3.75001C3.75001 17.962 4.0134 17.3261 4.48224 16.8572C4.95108 16.3884 5.58697 16.125 6.25001 16.125M13.75 16.125V13.3125C13.75 12.795 13.3308 12.375 12.8125 12.375H12.0867M6.25001 16.125V13.3125C6.25001 12.795 6.67001 12.375 7.18751 12.375H7.91417M12.0867 12.375H7.91417M12.0867 12.375C11.6186 11.5666 11.3389 10.6631 11.2683 9.73167M7.91417 12.375C8.38194 11.5666 8.66137 10.663 8.73167 9.73167M11.2683 9.73167C12.1083 9.53782 12.8914 9.15284 13.5583 8.60667M11.2683 9.73167C10.4337 9.92417 9.56627 9.92417 8.73167 9.73167M8.73167 9.73167C7.892 9.5377 7.10837 9.15273 6.44167 8.60667M4.37501 4.03C3.55667 4.14917 2.74667 4.29417 1.94501 4.46333C2.13084 5.55399 2.67299 6.55227 3.48663 7.30198C4.30027 8.05168 5.33948 8.51051 6.44167 8.60667M4.37501 4.03V4.25C4.37501 6.00667 5.18001 7.575 6.44167 8.60667M4.37501 4.03V2.7675C6.21334 2.50833 8.09167 2.375 10 2.375C11.9092 2.375 13.7875 2.50833 15.625 2.76667V4.03M15.625 4.03V4.25C15.625 6.00667 14.82 7.575 13.5583 8.60667M15.625 4.03C16.4394 4.1485 17.2498 4.29302 18.055 4.46333C17.8692 5.55386 17.3272 6.55205 16.5137 7.30174C15.7002 8.05143 14.6604 8.51034 13.5583 8.60667" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>        
+        <span>
+          <strong id="score-category">Beginner</strong> (<span id="score-total">0 points</span>)
+        </span>      
+      </div>
+      <div id="next-category-group" class="icon-group">
+        <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.375 15.5L8 9.875L11.5883 13.4642C12.6256 11.419 14.337 9.79448 16.4333 8.865L18.7167 7.84833M18.7167 7.84833L13.7667 5.94833M18.7167 7.84833L16.8167 12.7992" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>          
+        <span>
+          <span id="score-to-next-category">0</span> to <strong id="next-category">Novice</strong></span>
+        </span>      
+      </div>
+      <button id="more-button" class="small gray button">More</button>
     </header>
     <section id="game">
       <div id="input">
@@ -29,12 +369,92 @@
         <button id="letter-7" class="letter">—</button>
       </div>
       <div id="actions">
-        <button id="delete" class="action-button">Delete</button>
-        <button id="shuffle" class="action-button">Shuffle</button>
-        <button id="submit" class="action-button">Submit</button>
+        <div id="actions-inner">
+          <button id="delete" class="white button">
+            <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 10.25L14.25 12.5M14.25 12.5L16.5 14.75M14.25 12.5L16.5 10.25M14.25 12.5L12 14.75M9.42 19.67L3.045 13.295C2.83432 13.0841 2.71599 12.7981 2.71599 12.5C2.71599 12.2019 2.83432 11.9159 3.045 11.705L9.42 5.33C9.631 5.119 9.918 5 10.216 5H19.5C20.0967 5 20.669 5.23705 21.091 5.65901C21.5129 6.08097 21.75 6.65326 21.75 7.25V17.75C21.75 18.3467 21.5129 18.919 21.091 19.341C20.669 19.7629 20.0967 20 19.5 20H10.216C9.918 20 9.631 19.881 9.42 19.67Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>            
+          </button>
+          <button id="shuffle" class="white button">
+            <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16.023 9.848H21.015L17.834 6.665C16.8099 5.64087 15.5342 4.90439 14.1352 4.52961C12.7362 4.15482 11.2632 4.15493 9.86427 4.52992C8.46533 4.90492 7.18976 5.64159 6.1658 6.66587C5.14183 7.69015 4.40556 8.96595 4.031 10.365M2.985 20.144V15.152M2.985 15.152H7.977M2.985 15.152L6.165 18.335C7.18912 19.3591 8.46479 20.0956 9.86379 20.4704C11.2628 20.8452 12.7358 20.8451 14.1347 20.4701C15.5337 20.0951 16.8092 19.3584 17.8332 18.3341C18.8572 17.3099 19.5934 16.0341 19.968 14.635M21.015 4.856V9.846" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>            
+          </button>
+          <button id="submit" class="yellow button">Submit</button>
+        </div>
       </div>
     </section>
   </main>
+
+  <dialog id="yesterday-dialog" class="dialog">
+    <div class="nav">
+      <h1>Yesterday's Stats</h1>
+      <button id="yesterday-close-button" class="gray button">Close</button>
+    </div>
+    <div class="two-pane">
+      <div class="two-pane-pane">
+        <div class="icon-group">
+          <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.75 16.125H6.25001M13.75 16.125C14.413 16.125 15.0489 16.3884 15.5178 16.8572C15.9866 17.3261 16.25 17.962 16.25 18.625H3.75001C3.75001 17.962 4.0134 17.3261 4.48224 16.8572C4.95108 16.3884 5.58697 16.125 6.25001 16.125M13.75 16.125V13.3125C13.75 12.795 13.3308 12.375 12.8125 12.375H12.0867M6.25001 16.125V13.3125C6.25001 12.795 6.67001 12.375 7.18751 12.375H7.91417M12.0867 12.375H7.91417M12.0867 12.375C11.6186 11.5666 11.3389 10.6631 11.2683 9.73167M7.91417 12.375C8.38194 11.5666 8.66137 10.663 8.73167 9.73167M11.2683 9.73167C12.1083 9.53782 12.8914 9.15284 13.5583 8.60667M11.2683 9.73167C10.4337 9.92417 9.56627 9.92417 8.73167 9.73167M8.73167 9.73167C7.892 9.5377 7.10837 9.15273 6.44167 8.60667M4.37501 4.03C3.55667 4.14917 2.74667 4.29417 1.94501 4.46333C2.13084 5.55399 2.67299 6.55227 3.48663 7.30198C4.30027 8.05168 5.33948 8.51051 6.44167 8.60667M4.37501 4.03V4.25C4.37501 6.00667 5.18001 7.575 6.44167 8.60667M4.37501 4.03V2.7675C6.21334 2.50833 8.09167 2.375 10 2.375C11.9092 2.375 13.7875 2.50833 15.625 2.76667V4.03M15.625 4.03V4.25C15.625 6.00667 14.82 7.575 13.5583 8.60667M15.625 4.03C16.4394 4.1485 17.2498 4.29302 18.055 4.46333C17.8692 5.55386 17.3272 6.55205 16.5137 7.30174C15.7002 8.05143 14.6604 8.51034 13.5583 8.60667" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>        
+          <strong><span id="yesterday-categories-total">0 points</span> / <span id="yesterday-categories-max">0</span></strong>
+        </div>
+        <div id="yesterday-categories" class="two-pane-pane-inner">
+
+        </div>
+      </div>
+      <div class="two-pane-pane">
+        <div class="icon-group">
+          <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.75 6.875H14.25M6.75 9.375H10.5M2.375 10.6333C2.375 11.9667 3.31083 13.1283 4.63083 13.3225C5.57167 13.4608 6.5225 13.5667 7.48333 13.6383C7.775 13.66 8.04167 13.8133 8.20417 14.0558L10.5 17.5L12.7958 14.0558C12.8764 13.9361 12.9831 13.8362 13.108 13.7639C13.233 13.6915 13.3727 13.6486 13.5167 13.6383C14.471 13.5671 15.4224 13.4617 16.3692 13.3225C17.6892 13.1283 18.625 11.9675 18.625 10.6325V5.6175C18.625 4.2825 17.6892 3.12167 16.3692 2.9275C14.4258 2.64226 12.4642 2.49938 10.5 2.5C8.50667 2.5 6.54667 2.64584 4.63083 2.9275C3.31083 3.12167 2.375 4.28334 2.375 5.6175V10.6325V10.6333Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <strong><span id="yesterday-words-total">0 words</span> / <span id="yesterday-words-max">0</span></strong>
+        </div>
+        <div id="yesterday-words" class="two-pane-pane-inner">
+
+        </div>
+      </div>
+    </div>
+  </dialog>
+  
+  <dialog id="more-dialog" class="dialog">
+    <div class="nav">
+      <h1>Detailed Stats</h1>
+      <button id="more-close-button" class="gray button">Close</button>
+    </div>
+    <div class="two-pane">
+      <div class="two-pane-pane">
+        <div class="icon-group">
+          <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.75 16.125H6.25001M13.75 16.125C14.413 16.125 15.0489 16.3884 15.5178 16.8572C15.9866 17.3261 16.25 17.962 16.25 18.625H3.75001C3.75001 17.962 4.0134 17.3261 4.48224 16.8572C4.95108 16.3884 5.58697 16.125 6.25001 16.125M13.75 16.125V13.3125C13.75 12.795 13.3308 12.375 12.8125 12.375H12.0867M6.25001 16.125V13.3125C6.25001 12.795 6.67001 12.375 7.18751 12.375H7.91417M12.0867 12.375H7.91417M12.0867 12.375C11.6186 11.5666 11.3389 10.6631 11.2683 9.73167M7.91417 12.375C8.38194 11.5666 8.66137 10.663 8.73167 9.73167M11.2683 9.73167C12.1083 9.53782 12.8914 9.15284 13.5583 8.60667M11.2683 9.73167C10.4337 9.92417 9.56627 9.92417 8.73167 9.73167M8.73167 9.73167C7.892 9.5377 7.10837 9.15273 6.44167 8.60667M4.37501 4.03C3.55667 4.14917 2.74667 4.29417 1.94501 4.46333C2.13084 5.55399 2.67299 6.55227 3.48663 7.30198C4.30027 8.05168 5.33948 8.51051 6.44167 8.60667M4.37501 4.03V4.25C4.37501 6.00667 5.18001 7.575 6.44167 8.60667M4.37501 4.03V2.7675C6.21334 2.50833 8.09167 2.375 10 2.375C11.9092 2.375 13.7875 2.50833 15.625 2.76667V4.03M15.625 4.03V4.25C15.625 6.00667 14.82 7.575 13.5583 8.60667M15.625 4.03C16.4394 4.1485 17.2498 4.29302 18.055 4.46333C17.8692 5.55386 17.3272 6.55205 16.5137 7.30174C15.7002 8.05143 14.6604 8.51034 13.5583 8.60667" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>        
+          <strong id="more-categories-total">0 points</strong>
+        </div>
+        <div id="more-categories" class="two-pane-pane-inner">
+
+        </div>
+      </div>
+      <div class="two-pane-pane">
+        <div class="icon-group">
+          <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.75 6.875H14.25M6.75 9.375H10.5M2.375 10.6333C2.375 11.9667 3.31083 13.1283 4.63083 13.3225C5.57167 13.4608 6.5225 13.5667 7.48333 13.6383C7.775 13.66 8.04167 13.8133 8.20417 14.0558L10.5 17.5L12.7958 14.0558C12.8764 13.9361 12.9831 13.8362 13.108 13.7639C13.233 13.6915 13.3727 13.6486 13.5167 13.6383C14.471 13.5671 15.4224 13.4617 16.3692 13.3225C17.6892 13.1283 18.625 11.9675 18.625 10.6325V5.6175C18.625 4.2825 17.6892 3.12167 16.3692 2.9275C14.4258 2.64226 12.4642 2.49938 10.5 2.5C8.50667 2.5 6.54667 2.64584 4.63083 2.9275C3.31083 3.12167 2.375 4.28334 2.375 5.6175V10.6325V10.6333Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <strong id="more-words-total">0 words</strong>
+        </div>
+        <div id="more-words" class="two-pane-pane-inner">
+
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="loader">
+    <div>
+      <h1>BEE</h1>
+      <strong id="loader-text">Loading the game...</strong>
+      <button id="try-again" class="white button" style="display: none">Try again?</button>
+    </div>
+  </div>
 </body>
 <script>
   const Constants = {
@@ -75,15 +495,66 @@
     }
   };
 
-  const GameState = {};
+  const AppState = {
+    now: undefined,
+    yesterday: undefined,
+    
+    loading: true,
+    offline: false,
+    hasYesterday: false,
+  };
+
+  let GameHistory = {};
+  let GameState = {};
 
   const Bindings = {
+    Control: {
+      YesterdayButton: {
+        Element: document.getElementById("yesterday-button"),
+        Listener: undefined,
+      },
+      YesterdayCloseButton: {
+        Element: document.getElementById("yesterday-close-button"),
+        Listener: undefined,
+      },
+      MoreButton: {
+        Element: document.getElementById("more-button"),
+        Listener: undefined,
+      },
+      MoreCloseButton: {
+        Element: document.getElementById("more-close-button"),
+        Listener: undefined,
+      },
+    },
+    Dialogs: {
+      MoreDialog: document.getElementById("more-dialog"),
+      MoreCategoriesTotal: document.getElementById("more-categories-total"),
+      MoreCategories: document.getElementById("more-categories"),
+      MoreWordsTotal: document.getElementById("more-words-total"),
+      MoreWords: document.getElementById("more-words"),
+
+      YesterdayDialog: document.getElementById("yesterday-dialog"),
+      YesterdayCategoriesTotal: document.getElementById("yesterday-categories-total"),
+      YesterdayCategoriesMax: document.getElementById("yesterday-categories-max"),
+      YesterdayCategories: document.getElementById("yesterday-categories"),
+      YesterdayWordsTotal: document.getElementById("yesterday-words-total"),
+      YesterdayWordsMax: document.getElementById("yesterday-words-max"),
+      YesterdayWords: document.getElementById("yesterday-words"),
+    },
+    Loader: {
+      Loader: document.getElementById("loader"),
+      LoaderText: document.getElementById("loader-text"),
+      TryAgain: {
+        Element: document.getElementById("try-again"),
+        Listener: undefined,
+      },
+    },
     Score: {
       ScoreCategory: document.getElementById("score-category"),
       ScoreTotal: document.getElementById("score-total"),
       ScoreToNextCategory: document.getElementById("score-to-next-category"),
       NextCategory: document.getElementById("next-category"),
-      ScoreToQueenBee: document.getElementById("score-to-queen-bee"),
+      NextCategoryGroup: document.getElementById("next-category-group"),
     },
     Word: {
       Feedback: document.getElementById("feedback"),
@@ -139,28 +610,49 @@
 
   // can tweak this to load from local storage
   const load = async () => {
-    const localData = window.localStorage.getItem("GameState");
+    AppState.loading = true;
+    AppState.offline = false;
 
-    if (localData) {
-      Object.assign(GameState, JSON.parse(localData));
-    } else {
-      const response = await fetch(Constants.Api.Today);
-      const game = await response.json();
+    const now = new Date().toLocaleDateString("en-CA");
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString("en-CA");
+    const localDataString = window.localStorage.getItem("bee_History");
 
-      Object.assign(GameState, {
-        game,
-        score: 0,
-        currentWord: "",
-        feedback: "",
-        words: [],
-        CategoryPointsMap: Object.fromEntries(Object.entries(Constants.Maps.CategoryPercentageMap).map(([category, percentage]) => [category, Math.floor(percentage * game.total)])),
-      });
+    if (localDataString) {
+      GameHistory = JSON.parse(localDataString);
     }
+
+    if (!GameHistory[now]) {
+      try {
+        const response = await fetch(Constants.Api.Today);
+        const game = await response.json();
+
+        GameHistory[now] = {
+          date: now,
+          game,
+          score: 0,
+          currentWord: "",
+          feedback: "",
+          words: [],
+          CategoryPointsMap: Object.fromEntries(Object.entries(Constants.Maps.CategoryPercentageMap).map(([category, percentage]) => [category, Math.floor(percentage * game.total)])),
+        };
+      } catch {
+        AppState.offline = true;
+      }
+    }
+    
+    Object.assign(AppState, {
+      now,
+      yesterday,
+
+      loading: false,
+      hasYesterday: yesterday in GameHistory,
+    });
+    GameState = GameHistory[now];
+    updateDisplayState();
   };
 
-  // can tweak this to save  to local storage
   const save = async () => {
-    window.localStorage.setItem("GameState", JSON.stringify(GameState));
+    window.localStorage.setItem("bee_History", JSON.stringify(GameHistory));
   }
 
   const updateDisplayState = () => {
@@ -180,23 +672,71 @@
 
     Bindings.Score.ScoreCategory.textContent = currentCategory;
     Bindings.Score.ScoreTotal.textContent = `${GameState.score} point${GameState.score === 1 ? "" : "s"}`;
-    Bindings.Score.ScoreToNextCategory.textContent = `${pointsToNextCategory} point${pointsToNextCategory === 1 ? "" : "s"}`;;
+    Bindings.Score.ScoreToNextCategory.textContent = pointsToNextCategory;
     Bindings.Score.NextCategory.textContent = nextCategory;
-    Bindings.Score.ScoreToQueenBee.textContent = GameState.game.total - GameState.score;
+    Bindings.Score.NextCategoryGroup.style.setProperty("display", nextCategory ? "flex" : "none");
 
     Bindings.Word.Feedback.textContent = GameState.feedback;
     Bindings.Word.CurrentWord.textContent = GameState.currentWord.toLocaleUpperCase();
 
+    Bindings.Control.YesterdayButton.Element.style.setProperty("display", AppState.hasYesterday ? "block" : "none");
+
+    Bindings.Dialogs.MoreCategoriesTotal.textContent = `${GameState.score} point${GameState.score === 1 ? "" : "s"}`;
+    Bindings.Dialogs.MoreCategories.innerHTML = "";
+    Object.entries(GameState.CategoryPointsMap).forEach(([category, points]) => Bindings.Dialogs.MoreCategories.innerHTML += 
+      `<span${category === currentCategory ? ' class="yellow"' : ""}><strong>${category}</strong> (${points}  point${points === 1 ? "" : "s"})</span>`
+    );
+    Bindings.Dialogs.MoreWordsTotal.textContent = `${GameState.words.length} word${GameState.words.length === 1 ? "" : "s"}`;
+    Bindings.Dialogs.MoreWords.innerHTML = "";
+    GameState.words.forEach(word => Bindings.Dialogs.MoreWords.innerHTML += `<span class="gray">${word}</span>`);
+
+    if (AppState.hasYesterday) {
+      const YesterdayState = GameHistory[AppState.yesterday];
+      
+      let yesterdayCategory = undefined;
+      
+      for (const [category, points] of Object.entries(YesterdayState.CategoryPointsMap)) {
+        if (points <= YesterdayState.score) {
+          yesterdayCategory = category;
+        }
+      };
+
+      Bindings.Dialogs.YesterdayCategoriesTotal.textContent = `${YesterdayState.score} point${YesterdayState.score === 1 ? "" : "s"}`;
+      Bindings.Dialogs.YesterdayCategoriesMax.textContent = YesterdayState.game.total;
+      Bindings.Dialogs.YesterdayCategories.innerHTML = "";
+      Object.entries(YesterdayState.CategoryPointsMap).forEach(([category, points]) => Bindings.Dialogs.YesterdayCategories.innerHTML += 
+        `<span${category === yesterdayCategory ? ' class="yellow"' : ""}><strong>${category}</strong> (${points}  point${points === 1 ? "" : "s"})</span>`
+      );
+      Bindings.Dialogs.YesterdayWordsTotal.textContent = `${YesterdayState.words.length} word${YesterdayState.words.length === 1 ? "" : "s"}`;
+      Bindings.Dialogs.YesterdayWordsMax.textContent = YesterdayState.game.wordlist.length;
+      Bindings.Dialogs.YesterdayWords.innerHTML = "";
+      YesterdayState.game.wordlist.forEach(word => Bindings.Dialogs.YesterdayWords.innerHTML += `<span class="${YesterdayState.words.includes(word) ? "yellow" : "gray"}">${word}</span>`);
+    }
+
+    if (AppState.loading) {
+      Bindings.Loader.Loader.style.setProperty("display", "grid");
+      Bindings.Loader.LoaderText.textContent = "Loading the game...";
+      Bindings.Loader.TryAgain.Element.style.setProperty("display", "none");
+    } else if (AppState.offline) {
+      Bindings.Loader.Loader.style.setProperty("display", "grid");
+      Bindings.Loader.LoaderText.textContent = "You're offline :(";
+      Bindings.Loader.TryAgain.Element.style.setProperty("display", "block");
+    } else {
+      Bindings.Loader.Loader.style.setProperty("display", "none");
+      Bindings.Loader.LoaderText.textContent = "Loading the game...";
+      Bindings.Loader.TryAgain.Element.style.setProperty("display", "none");
+    }
+
     save();
   }
 
-  const updateButtonActions = () => {
-    const updateBinding = (binding, callback) => {
-      binding.Element.removeEventListener("click", binding.Listener);
-      binding.Listener = callback;
-      binding.Element.addEventListener("click", binding.Listener);
-    };
+  const updateBinding = (binding, callback) => {
+    binding.Element.removeEventListener("click", binding.Listener);
+    binding.Listener = callback;
+    binding.Element.addEventListener("click", binding.Listener);
+  };
 
+  const updateButtonActions = () => {
     Bindings.Interactive.Center.Element.textContent = GameState.game.center.toLocaleUpperCase();
     updateBinding(Bindings.Interactive.Center, () => {
       if (GameState.feedback) {
@@ -214,6 +754,8 @@
         if (GameState.feedback) {
           GameState.currentWord = letter;
           GameState.feedback = "";
+        } else if (GameState.currentWord.length > 15) {
+          GameState.feedback = "Word too long.";
         } else {
           GameState.currentWord += letter;
         }
@@ -225,6 +767,8 @@
       if (GameState.feedback) {
         GameState.currentWord = "";
         GameState.feedback = "";
+      } else if (GameState.currentWord.length > 15) {
+        GameState.feedback = "Word too long.";
       } else {
         GameState.currentWord = GameState.currentWord.slice(0, -1);
       }
@@ -232,7 +776,10 @@
     });
 
     updateBinding(Bindings.Actions.Shuffle, () => {
-      GameState.feedback = "Shuffle isn't supported yet.";
+      Bindings.Interactive.Letters = Bindings.Interactive.Letters
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
       updateButtonActions();
       updateDisplayState();
     });
@@ -246,8 +793,11 @@
         } else {
           const isPangram = `${GameState.game.letters}${GameState.game.center}`.split("").every(letter => word.includes(letter));
           const score = Constants.Maps.WordLengthScoreMap[word.length] + (isPangram ? 7 : 0);
+
           GameState.score += score;
-          GameState.feedback = `${isPangram ? "Pangram!" : "Nice!"} (${score} points)`;
+          GameState.words.push(word);
+          GameState.words.sort();
+          GameState.feedback = `${isPangram ? "Pangram!" : "Nice!"} (${score} point${score === 1 ? "" : "s"})`;
         }
       } else {
         if (word.length <= 3) {
@@ -261,13 +811,31 @@
 
       updateDisplayState();
     });
+  };
+
+  const updateControlButtonsOnce = () => {
+    updateBinding(Bindings.Control.MoreButton, () => {
+      Bindings.Dialogs.MoreDialog.showModal();
+    });
+    updateBinding(Bindings.Control.MoreCloseButton, () => {
+      Bindings.Dialogs.MoreDialog.close();
+    });
+    
+    updateBinding(Bindings.Control.YesterdayButton, () => {
+      Bindings.Dialogs.YesterdayDialog.showModal();
+    });
+    updateBinding(Bindings.Control.YesterdayCloseButton, () => {
+      Bindings.Dialogs.YesterdayDialog.close();
+    });
+    
+    updateBinding(Bindings.Loader.TryAgain, load);
   }
 
   const play = async () => {
     await load();
 
+    updateControlButtonsOnce();
     updateButtonActions();
-    updateDisplayState();
   };
 
   play();
