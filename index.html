@@ -5,10 +5,17 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#FFD339">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;900&display=swap" rel="stylesheet">
-  <title>Bee</title>
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <title>Play Bee</title>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -62,8 +69,8 @@
     }
 
     .two-pane {
-      max-height: 100%;
-      overflow: scroll;
+      height: 100%;
+      overflow-y: auto;
 
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -836,6 +843,12 @@
 
     updateControlButtonsOnce();
     updateButtonActions();
+
+    if ('serviceWorker' in navigator) {
+      await navigator.serviceWorker.register('./sw.js', {
+        scope: "/"
+      });
+    }
   };
 
   play();
