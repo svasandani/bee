@@ -663,6 +663,22 @@
   }
 
   const updateDisplayState = () => {
+    if (AppState.loading) {
+      Bindings.Loader.Loader.style.setProperty("display", "grid");
+      Bindings.Loader.LoaderText.textContent = "Loading the game...";
+      Bindings.Loader.TryAgain.Element.style.setProperty("display", "none");
+      return;
+    } else if (AppState.offline) {
+      Bindings.Loader.Loader.style.setProperty("display", "grid");
+      Bindings.Loader.LoaderText.textContent = "You're offline :(";
+      Bindings.Loader.TryAgain.Element.style.setProperty("display", "block");
+      return;
+    } else {
+      Bindings.Loader.Loader.style.setProperty("display", "none");
+      Bindings.Loader.LoaderText.textContent = "Loading the game...";
+      Bindings.Loader.TryAgain.Element.style.setProperty("display", "none");
+    }
+
     let currentCategory = undefined;
     let nextCategory = undefined;
     let pointsToNextCategory = 0;
@@ -718,20 +734,6 @@
       Bindings.Dialogs.YesterdayWordsMax.textContent = YesterdayState.game.wordlist.length;
       Bindings.Dialogs.YesterdayWords.innerHTML = "";
       YesterdayState.game.wordlist.forEach(word => Bindings.Dialogs.YesterdayWords.innerHTML += `<span class="${YesterdayState.words.includes(word) ? "yellow" : "gray"}">${word}</span>`);
-    }
-
-    if (AppState.loading) {
-      Bindings.Loader.Loader.style.setProperty("display", "grid");
-      Bindings.Loader.LoaderText.textContent = "Loading the game...";
-      Bindings.Loader.TryAgain.Element.style.setProperty("display", "none");
-    } else if (AppState.offline) {
-      Bindings.Loader.Loader.style.setProperty("display", "grid");
-      Bindings.Loader.LoaderText.textContent = "You're offline :(";
-      Bindings.Loader.TryAgain.Element.style.setProperty("display", "block");
-    } else {
-      Bindings.Loader.Loader.style.setProperty("display", "none");
-      Bindings.Loader.LoaderText.textContent = "Loading the game...";
-      Bindings.Loader.TryAgain.Element.style.setProperty("display", "none");
     }
 
     save();
