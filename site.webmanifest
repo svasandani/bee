@@ -15,7 +15,7 @@
     ],
     "theme_color": "#FFD339",
     "background_color": "#FFFFFF",
-    "display": "fullscreen",
+    "display": "standalone",
     "description": "A words game",
     "start_url": "/"
 }
