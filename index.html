@@ -20,6 +20,7 @@
     *, *::before, *::after {
       box-sizing: border-box;
       font-family: 'Be Vietnam Pro', sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     :root {
@@ -27,6 +28,7 @@
       --white: #ffffff;
       --gray: #E5E5E5;
       --yellow: #FFD339;
+      --yellow-text: #FFC93E;
     }
 
     body {
@@ -99,6 +101,13 @@
       font-size: 1rem;
       padding: 0.375rem 0.5rem;
     }
+    .button.small {
+      font-size: 0.75rem;
+    }
+    .button svg {
+      display: block;
+    }
+    
     .gray {
       background-color: var(--gray);
     }
@@ -108,11 +117,8 @@
     .yellow {
       background-color: var(--yellow);
     }
-    .button.small {
-      font-size: 0.75rem;
-    }
-    .button svg {
-      display: block;
+    .yellow-color {
+      color: var(--yellow);
     }
 
     .nav {
@@ -701,18 +707,20 @@
     Bindings.Score.NextCategoryGroup.style.setProperty("display", nextCategory ? "flex" : "none");
 
     Bindings.Word.Feedback.textContent = GameState.feedback;
-    Bindings.Word.CurrentWord.textContent = GameState.currentWord.toLocaleUpperCase();
+    Bindings.Word.CurrentWord.innerHTML = GameState.currentWord.toLocaleUpperCase().split("").reduce((innerHTML, letter) =>
+      innerHTML += `<span${letter === GameState.game.center.toLocaleUpperCase() ? ' class="yellow-color"' : ""}>${letter}</span>`,
+      ""
+    );
 
     Bindings.Control.YesterdayButton.Element.style.setProperty("display", AppState.hasYesterday ? "block" : "none");
 
     Bindings.Dialogs.MoreCategoriesTotal.textContent = `${GameState.score} point${GameState.score === 1 ? "" : "s"}`;
-    Bindings.Dialogs.MoreCategories.innerHTML = "";
-    Object.entries(GameState.CategoryPointsMap).forEach(([category, points]) => Bindings.Dialogs.MoreCategories.innerHTML += 
-      `<span${category === currentCategory ? ' class="yellow"' : ""}><strong>${category}</strong> (${points}  point${points === 1 ? "" : "s"})</span>`
+    Bindings.Dialogs.MoreCategories.innerHTML = Object.entries(GameState.CategoryPointsMap).reduce((innerHTML, [category, points]) => 
+      innerHTML += `<span${category === currentCategory ? ' class="yellow"' : ""}><strong>${category}</strong> (${points}  point${points === 1 ? "" : "s"})</span>`,
+      ""
     );
     Bindings.Dialogs.MoreWordsTotal.textContent = `${GameState.words.length} word${GameState.words.length === 1 ? "" : "s"}`;
-    Bindings.Dialogs.MoreWords.innerHTML = "";
-    GameState.words.forEach(word => Bindings.Dialogs.MoreWords.innerHTML += `<span class="gray">${word}</span>`);
+    Bindings.Dialogs.MoreWords.innerHTML = GameState.words.reduce((innerHTML, word) => innerHTML += `<span class="gray">${word}</span>`, "");
 
     if (AppState.hasYesterday) {
       const YesterdayState = GameHistory[AppState.yesterday];
@@ -727,23 +735,22 @@
 
       Bindings.Dialogs.YesterdayCategoriesTotal.textContent = `${YesterdayState.score} point${YesterdayState.score === 1 ? "" : "s"}`;
       Bindings.Dialogs.YesterdayCategoriesMax.textContent = YesterdayState.game.total;
-      Bindings.Dialogs.YesterdayCategories.innerHTML = "";
-      Object.entries(YesterdayState.CategoryPointsMap).forEach(([category, points]) => Bindings.Dialogs.YesterdayCategories.innerHTML += 
-        `<span${category === yesterdayCategory ? ' class="yellow"' : ""}><strong>${category}</strong> (${points}  point${points === 1 ? "" : "s"})</span>`
+      Bindings.Dialogs.YesterdayCategories.innerHTML = Object.entries(YesterdayState.CategoryPointsMap).reduce((innerHTML, [category, points]) => 
+        innerHTML += `<span${category === yesterdayCategory ? ' class="yellow"' : ""}><strong>${category}</strong> (${points}  point${points === 1 ? "" : "s"})</span>`,
+        ""
       );
       Bindings.Dialogs.YesterdayWordsTotal.textContent = `${YesterdayState.words.length} word${YesterdayState.words.length === 1 ? "" : "s"}`;
       Bindings.Dialogs.YesterdayWordsMax.textContent = YesterdayState.game.wordlist.length;
-      Bindings.Dialogs.YesterdayWords.innerHTML = "";
-      YesterdayState.game.wordlist.forEach(word => Bindings.Dialogs.YesterdayWords.innerHTML += `<span class="${YesterdayState.words.includes(word) ? "yellow" : "gray"}">${word}</span>`);
+      Bindings.Dialogs.YesterdayWords.innerHTML = YesterdayState.game.wordlist.reduce((innerHTML, word) => innerHTML += `<span class="${YesterdayState.words.includes(word) ? "yellow" : "gray"}">${word}</span>`, "");
     }
 
     save();
   }
 
   const updateBinding = (binding, callback) => {
-    binding.Element.removeEventListener("click", binding.Listener);
+    binding.Element.removeEventListener("pointerdown", binding.Listener);
     binding.Listener = callback;
-    binding.Element.addEventListener("click", binding.Listener);
+    binding.Element.addEventListener("pointerdown", binding.Listener);
   };
 
   const updateButtonActions = () => {
@@ -752,7 +759,9 @@
       if (GameState.feedback) {
         GameState.currentWord = GameState.game.center;
         GameState.feedback = "";
-      } else {
+        } else if (GameState.currentWord.length > 15) {
+          GameState.feedback = "Word too long.";
+        } else {
         GameState.currentWord += GameState.game.center;
       }
       updateDisplayState();
