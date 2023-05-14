@@ -1131,7 +1131,10 @@
           (innerHTML, [key, game]) =>
             key === AppState.now || isNaN(key.charAt(0))
               ? innerHTML
-              : (innerHTML += `<span><strong>${key}</strong> (${
+              : (innerHTML += `<span><strong>${key.slice(5, 7)}/${key.slice(
+                  8,
+                  10
+                )}</strong> (${
                   calculateCategories(game.score, game.CategoryPointsMap)
                     .currentCategory
                 })</span>`),
