@@ -119,9 +119,8 @@
         align-items: center;
         justify-content: space-between;
       }
-      .button.like-span {
-        display: block;
-        text-align: left;
+      .button:disabled {
+        opacity: 0.4;
       }
       .button.small {
         font-size: 0.75rem;
@@ -307,6 +306,9 @@
         font-size: 2rem;
         font-weight: bold;
       }
+      button.letter:disabled {
+        opacity: 0.4;
+      }
 
       button#letter-1 {
         --offsetY: calc(-1 * (var(--height) + var(--gap)));
@@ -349,7 +351,7 @@
       }
 
       #more-categories,
-      #yesterday-categories,
+      #archived-categories,
       #overview-daily-games,
       #overview-random-games-container,
       #overview-random-games {
@@ -359,7 +361,7 @@
       }
 
       #more-words,
-      #yesterday-words {
+      #archived-words {
         display: flex;
         flex-flow: row wrap;
         gap: 0.5rem;
@@ -404,7 +406,7 @@
         </div>
         <h1>BEE</h1>
         <div class="nav-buttons right">
-          <button id="yesterday-button" class="white button">
+          <button id="archive-button" class="white button">
             <svg
               width="20"
               height="20"
@@ -413,7 +415,7 @@
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M17.5 14.0092C17.5 14.7292 16.7225 15.18 16.0975 14.8233L10.1742 11.4383C10.0308 11.3563 9.91161 11.2378 9.82873 11.0949C9.74584 10.952 9.70219 10.7898 9.70219 10.6246C9.70219 10.4594 9.74584 10.2971 9.82873 10.1542C9.91161 10.0113 10.0308 9.89285 10.1742 9.81082L16.0975 6.42583C16.2401 6.34438 16.4016 6.30181 16.5658 6.30238C16.73 6.30296 16.8912 6.34665 17.0332 6.42909C17.1752 6.51153 17.2931 6.62983 17.375 6.77214C17.4569 6.91445 17.5 7.07578 17.5 7.23999V14.0092ZM9.375 14.0092C9.375 14.7292 8.5975 15.18 7.9725 14.8233L2.04917 11.4383C1.90578 11.3563 1.78661 11.2378 1.70373 11.0949C1.62084 10.952 1.57719 10.7898 1.57719 10.6246C1.57719 10.4594 1.62084 10.2971 1.70373 10.1542C1.78661 10.0113 1.90578 9.89285 2.04917 9.81082L7.9725 6.42499C8.11508 6.34354 8.27656 6.30098 8.44077 6.30155C8.60498 6.30212 8.76616 6.34582 8.90817 6.42826C9.05018 6.5107 9.16805 6.62899 9.24998 6.77131C9.33191 6.91362 9.37502 7.07495 9.375 7.23916V14.0083V14.0092Z"
+                d="M16.875 6.25L16.3542 15.11C16.3261 15.5875 16.1166 16.0363 15.7685 16.3644C15.4204 16.6925 14.96 16.8752 14.4817 16.875H5.51833C5.03997 16.8752 4.57962 16.6925 4.23152 16.3644C3.88342 16.0363 3.6739 15.5875 3.64583 15.11L3.125 6.25M8.33333 9.375H11.6667M2.8125 6.25H17.1875C17.705 6.25 18.125 5.83 18.125 5.3125V4.0625C18.125 3.545 17.705 3.125 17.1875 3.125H2.8125C2.295 3.125 1.875 3.545 1.875 4.0625V5.3125C1.875 5.83 2.295 6.25 2.8125 6.25Z"
                 stroke="black"
                 stroke-width="1.5"
                 stroke-linecap="round"
@@ -628,10 +630,10 @@
       </div>
     </dialog>
 
-    <dialog id="yesterday-dialog" class="dialog">
+    <dialog id="archived-dialog" class="dialog">
       <div class="nav">
-        <h1>Yesterday's Stats</h1>
-        <button id="yesterday-close-button" class="gray button">
+        <h1>Archived Stats</h1>
+        <button id="archived-close-button" class="gray button">
           <svg
             width="20"
             height="20"
@@ -668,11 +670,11 @@
               />
             </svg>
             <strong
-              ><span id="yesterday-categories-total">0 points</span> /
-              <span id="yesterday-categories-max">0</span></strong
+              ><span id="archived-categories-total">0 points</span> /
+              <span id="archived-categories-max">0</span></strong
             >
           </div>
-          <div id="yesterday-categories" class="two-pane-pane-inner"></div>
+          <div id="archived-categories" class="two-pane-pane-inner"></div>
         </div>
         <div class="two-pane-pane">
           <div class="icon-group">
@@ -692,11 +694,11 @@
               />
             </svg>
             <strong
-              ><span id="yesterday-words-total">0 words</span> /
-              <span id="yesterday-words-max">0</span></strong
+              ><span id="archived-words-total">0 words</span> /
+              <span id="archived-words-max">0</span></strong
             >
           </div>
-          <div id="yesterday-words" class="two-pane-pane-inner"></div>
+          <div id="archived-words" class="two-pane-pane-inner"></div>
         </div>
       </div>
     </dialog>
@@ -810,11 +812,7 @@
 
     const AppState = {
       now: undefined,
-      yesterday: undefined,
-
       currentGameKey: undefined,
-      hasHistory: false,
-      hasYesterday: false,
     };
 
     let GameHistory = {};
@@ -834,12 +832,12 @@
           Element: document.getElementById("overview-new-random-game"),
           Listener: undefined,
         },
-        YesterdayButton: {
-          Element: document.getElementById("yesterday-button"),
+        ArchiveButton: {
+          Element: document.getElementById("archive-button"),
           Listener: undefined,
         },
-        YesterdayCloseButton: {
-          Element: document.getElementById("yesterday-close-button"),
+        ArchivedCloseButton: {
+          Element: document.getElementById("archived-close-button"),
           Listener: undefined,
         },
         MoreButton: {
@@ -858,17 +856,17 @@
         MoreWordsTotal: document.getElementById("more-words-total"),
         MoreWords: document.getElementById("more-words"),
 
-        YesterdayDialog: document.getElementById("yesterday-dialog"),
-        YesterdayCategoriesTotal: document.getElementById(
-          "yesterday-categories-total"
+        ArchivedDialog: document.getElementById("archived-dialog"),
+        ArchivedCategoriesTotal: document.getElementById(
+          "archived-categories-total"
         ),
-        YesterdayCategoriesMax: document.getElementById(
-          "yesterday-categories-max"
+        ArchivedCategoriesMax: document.getElementById(
+          "archived-categories-max"
         ),
-        YesterdayCategories: document.getElementById("yesterday-categories"),
-        YesterdayWordsTotal: document.getElementById("yesterday-words-total"),
-        YesterdayWordsMax: document.getElementById("yesterday-words-max"),
-        YesterdayWords: document.getElementById("yesterday-words"),
+        ArchivedCategories: document.getElementById("archived-categories"),
+        ArchivedWordsTotal: document.getElementById("archived-words-total"),
+        ArchivedWordsMax: document.getElementById("archived-words-max"),
+        ArchivedWords: document.getElementById("archived-words"),
 
         OverviewDialog: document.getElementById("overview-dialog"),
         OverviewDailyGames: document.getElementById("overview-daily-games"),
@@ -933,6 +931,19 @@
       },
     };
 
+    const archiveGame = (gameKey) => {
+      if (!(gameKey in GameHistory))
+        throw new Error("Attempted to archive nonexistent game!");
+
+      if (gameKey === AppState.now)
+        throw new Error("Attempted to archive current game!");
+
+      GameHistory[gameKey].archived = true;
+      GameHistory[gameKey].currentWord = "ARCHIVED";
+      GameHistory[gameKey].feedback = "This game is archived.";
+
+      updateDisplayState();
+    };
     const switchGame = (gameKey) => {
       if (!(gameKey in GameHistory))
         throw new Error("Attempted to switch to nonexistent game!");
@@ -971,9 +982,6 @@
       const now = new Date(Date.now() - 3 * 60 * 60 * 1000).toLocaleDateString(
         "en-CA"
       );
-      const yesterday = new Date(
-        Date.now() - (24 + 3) * 60 * 60 * 1000
-      ).toLocaleDateString("en-CA");
       const localDataString = window.localStorage.getItem("bee_History");
 
       if (localDataString) {
@@ -1004,10 +1012,6 @@
 
       Object.assign(AppState, {
         now,
-        yesterday,
-
-        hasHistory: Object.keys(GameHistory).length > 1,
-        hasYesterday: yesterday in GameHistory,
       });
       switchGame(now);
     };
@@ -1050,7 +1054,7 @@
       Bindings.Score.NextCategory.textContent = nextCategory;
       Bindings.Score.NextCategoryGroup.style.setProperty(
         "display",
-        nextCategory ? "flex" : "none"
+        nextCategory && !GameState.archived ? "flex" : "none"
       );
 
       Bindings.Word.Feedback.textContent = GameState.feedback;
@@ -1067,85 +1071,73 @@
           "<span></span>"
         );
 
-      Bindings.Control.YesterdayButton.Element.style.setProperty(
-        "display",
-        AppState.hasYesterday ? "block" : "none"
-      );
-
-      Bindings.Dialogs.MoreCategoriesTotal.textContent = `${
-        GameState.score
-      } point${GameState.score === 1 ? "" : "s"}`;
-      Bindings.Dialogs.MoreCategories.innerHTML = Object.entries(
-        GameState.CategoryPointsMap
-      ).reduce(
-        (innerHTML, [category, points]) =>
-          (innerHTML += `<span${
-            category === currentCategory ? ' class="yellow"' : ""
-          }><strong>${category}</strong> (${points}  point${
-            points === 1 ? "" : "s"
-          })</span>`),
-        ""
-      );
-      Bindings.Dialogs.MoreWordsTotal.textContent = `${
-        GameState.words.length
-      } word${GameState.words.length === 1 ? "" : "s"}`;
-      Bindings.Dialogs.MoreWords.innerHTML = GameState.words.reduce(
-        (innerHTML, word) =>
-          (innerHTML += `<span class="${
-            word.length >= 7 &&
-            GameState.game.letters
-              .split("")
-              .every((letter) => word.includes(letter))
-              ? "strong "
-              : ""
-          }gray">${word}</span>`),
-        ""
-      );
-
-      if (AppState.hasYesterday) {
-        const YesterdayState = GameHistory[AppState.yesterday];
-
-        const { currentCategory: yesterdayCategory } = calculateCategories(
-          YesterdayState.score,
-          YesterdayState.CategoryPointsMap
-        );
-
-        Bindings.Dialogs.YesterdayCategoriesTotal.textContent = `${
-          YesterdayState.score
-        } point${YesterdayState.score === 1 ? "" : "s"}`;
-        Bindings.Dialogs.YesterdayCategoriesMax.textContent =
-          YesterdayState.game.total;
-        Bindings.Dialogs.YesterdayCategories.innerHTML = Object.entries(
-          YesterdayState.CategoryPointsMap
+      if (GameState.archived) {
+        Bindings.Dialogs.ArchivedCategoriesTotal.textContent = `${
+          GameState.score
+        } point${GameState.score === 1 ? "" : "s"}`;
+        Bindings.Dialogs.ArchivedCategoriesMax.textContent =
+          GameState.game.total;
+        Bindings.Dialogs.ArchivedCategories.innerHTML = Object.entries(
+          GameState.CategoryPointsMap
         ).reduce(
           (innerHTML, [category, points]) =>
             (innerHTML += `<span${
-              category === yesterdayCategory ? ' class="yellow"' : ""
+              category === currentCategory ? ' class="yellow"' : ""
             }><strong>${category}</strong> (${points}  point${
               points === 1 ? "" : "s"
             })</span>`),
           ""
         );
-        Bindings.Dialogs.YesterdayWordsTotal.textContent = `${
-          YesterdayState.words.length
-        } word${YesterdayState.words.length === 1 ? "" : "s"}`;
-        Bindings.Dialogs.YesterdayWordsMax.textContent =
-          YesterdayState.game.wordlist.length;
-        Bindings.Dialogs.YesterdayWords.innerHTML =
-          YesterdayState.game.wordlist.reduce(
+        Bindings.Dialogs.ArchivedWordsTotal.textContent = `${
+          GameState.words.length
+        } word${GameState.words.length === 1 ? "" : "s"}`;
+        Bindings.Dialogs.ArchivedWordsMax.textContent =
+          GameState.game.wordlist.length;
+        Bindings.Dialogs.ArchivedWords.innerHTML =
+          GameState.game.wordlist.reduce(
             (innerHTML, word) =>
               (innerHTML += `<span class="${
                 word.length >= 7 &&
-                YesterdayState.game.letters
+                GameState.game.letters
                   .split("")
                   .every((letter) => word.includes(letter))
                   ? "strong "
                   : ""
               }${
-                YesterdayState.words.includes(word) ? "yellow" : "gray"
+                GameState.words.includes(word) ? "yellow" : "gray"
               }">${word}</span>`),
             ""
           );
+      } else {
+        Bindings.Dialogs.MoreCategoriesTotal.textContent = `${
+          GameState.score
+        } point${GameState.score === 1 ? "" : "s"}`;
+        Bindings.Dialogs.MoreCategories.innerHTML = Object.entries(
+          GameState.CategoryPointsMap
+        ).reduce(
+          (innerHTML, [category, points]) =>
+            (innerHTML += `<span${
+              category === currentCategory ? ' class="yellow"' : ""
+            }><strong>${category}</strong> (${points}  point${
+              points === 1 ? "" : "s"
+            })</span>`),
+          ""
+        );
+        Bindings.Dialogs.MoreWordsTotal.textContent = `${
+          GameState.words.length
+        } word${GameState.words.length === 1 ? "" : "s"}`;
+        Bindings.Dialogs.MoreWords.innerHTML = GameState.words.reduce(
+          (innerHTML, word) =>
+            (innerHTML += `<span class="${
+              word.length >= 7 &&
+              GameState.game.letters
+                .split("")
+                .every((letter) => word.includes(letter))
+                ? "strong "
+                : ""
+            }gray">${word}</span>`),
+          ""
+        );
       }
 
       Bindings.Dialogs.OverviewDailyGames.innerHTML = Object.entries(
@@ -1157,21 +1149,46 @@
           (innerHTML, [key, game]) =>
             key === AppState.now || isNaN(key.charAt(0))
               ? innerHTML
-              : (innerHTML += `<span><strong>${key.slice(5, 7)}/${key.slice(
-                  8,
-                  10
-                )}</strong> (${
-                  calculateCategories(game.score, game.CategoryPointsMap)
-                    .currentCategory
-                })</span>`),
+              : (innerHTML += `<button data-game-key=${key} class="small ${
+                  AppState.currentGameKey === key ? "yellow" : "gray"
+                } button">
+                    <span>
+                      <strong>
+                        ${key.slice(5, 7)}/${key.slice(8, 10)}
+                      </strong> 
+                      (${
+                        calculateCategories(game.score, game.CategoryPointsMap)
+                          .currentCategory
+                      })
+                    </span>
+                    ${
+                      game.archived
+                        ? `<svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.6562 4.85416L12.2656 11.4992C12.2446 11.8573 12.0874 12.1939 11.8264 12.44C11.5653 12.6861 11.22 12.823 10.8613 12.8229H4.13875C3.77998 12.823 3.43472 12.6861 3.17364 12.44C2.91257 12.1939 2.75542 11.8573 2.73438 11.4992L2.34375 4.85416M6.25 7.19791H8.75M2.10938 4.85416H12.8906C13.2787 4.85416 13.5938 4.53916 13.5938 4.15103V3.21353C13.5938 2.82541 13.2787 2.51041 12.8906 2.51041H2.10938C1.72125 2.51041 1.40625 2.82541 1.40625 3.21353V4.15103C1.40625 4.53916 1.72125 4.85416 2.10938 4.85416Z" stroke="black" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>`
+                        : ""
+                    }
+                  </button>`),
           `<button data-game-key=${AppState.now} class="small ${
             AppState.currentGameKey === AppState.now ? "yellow" : "gray"
-          } button like-span"><strong>Today</strong> (${
-            calculateCategories(
-              GameHistory[AppState.now].score,
-              GameHistory[AppState.now].CategoryPointsMap
-            ).currentCategory
-          })</button>`
+          } button">
+            <span>
+              <strong>Today</strong>
+              (${
+                calculateCategories(
+                  GameHistory[AppState.now].score,
+                  GameHistory[AppState.now].CategoryPointsMap
+                ).currentCategory
+              })
+            </span>
+            ${
+              game.archived
+                ? `<svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.6562 4.85416L12.2656 11.4992C12.2446 11.8573 12.0874 12.1939 11.8264 12.44C11.5653 12.6861 11.22 12.823 10.8613 12.8229H4.13875C3.77998 12.823 3.43472 12.6861 3.17364 12.44C2.91257 12.1939 2.75542 11.8573 2.73438 11.4992L2.34375 4.85416M6.25 7.19791H8.75M2.10938 4.85416H12.8906C13.2787 4.85416 13.5938 4.53916 13.5938 4.15103V3.21353C13.5938 2.82541 13.2787 2.51041 12.8906 2.51041H2.10938C1.72125 2.51041 1.40625 2.82541 1.40625 3.21353V4.15103C1.40625 4.53916 1.72125 4.85416 2.10938 4.85416Z" stroke="black" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>`
+                : ""
+            }
+          </button>`
         );
       Bindings.Dialogs.OverviewRandomGames.innerHTML = Object.entries(
         GameHistory
@@ -1183,19 +1200,34 @@
               ? innerHTML
               : (innerHTML += `<button data-game-key=${key} class="small ${
                   key === AppState.currentGameKey ? "yellow" : "gray"
-                } button like-span"><strong>${key.replace(
-                  "+",
-                  " • "
-                )}</strong> (${
-                  calculateCategories(game.score, game.CategoryPointsMap)
-                    .currentCategory
-                })</button>`),
+                } button">
+                  <span>
+                    <strong>
+                      ${key.replace("+", " • ")}
+                    </strong> 
+                    (${
+                      calculateCategories(game.score, game.CategoryPointsMap)
+                        .currentCategory
+                    })
+                  </span>
+                  ${
+                    game.archived
+                      ? `<svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12.6562 4.85416L12.2656 11.4992C12.2446 11.8573 12.0874 12.1939 11.8264 12.44C11.5653 12.6861 11.22 12.823 10.8613 12.8229H4.13875C3.77998 12.823 3.43472 12.6861 3.17364 12.44C2.91257 12.1939 2.75542 11.8573 2.73438 11.4992L2.34375 4.85416M6.25 7.19791H8.75M2.10938 4.85416H12.8906C13.2787 4.85416 13.5938 4.53916 13.5938 4.15103V3.21353C13.5938 2.82541 13.2787 2.51041 12.8906 2.51041H2.10938C1.72125 2.51041 1.40625 2.82541 1.40625 3.21353V4.15103C1.40625 4.53916 1.72125 4.85416 2.10938 4.85416Z" stroke="black" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>`
+                      : ""
+                  }
+                </button>`),
           ""
         );
 
       updateButtonBindings();
 
       save();
+    };
+
+    const clearBinding = (binding) => {
+      binding.Element.removeEventListener("pointerdown", binding.Listener);
     };
 
     const updateBinding = (binding, callback) => {
@@ -1207,91 +1239,141 @@
     const updateButtonBindings = () => {
       Bindings.Interactive.Center.Element.textContent =
         GameState.game.center.toLocaleUpperCase();
-      updateBinding(Bindings.Interactive.Center, () => {
-        if (GameState.feedback) {
-          GameState.currentWord = GameState.game.center;
-          GameState.feedback = "";
-        } else if (GameState.currentWord.length > 15) {
-          GameState.feedback = "Word too long.";
-        } else {
-          GameState.currentWord += GameState.game.center;
-        }
-        updateDisplayState();
-      });
-
       for (const [index, letter] of GameState.game.letters
         .split("")
         .entries()) {
         Bindings.Interactive.Letters[index].Element.textContent =
           letter.toLocaleUpperCase();
-        updateBinding(Bindings.Interactive.Letters[index], () => {
+      }
+
+      if (GameState.archived) {
+        Bindings.Interactive.Center.Element.setAttribute("disabled", true);
+        clearBinding(Bindings.Interactive.Center);
+
+        Bindings.Interactive.Letters.forEach((Binding) => {
+          Binding.Element.setAttribute("disabled", true);
+          clearBinding(Binding);
+        });
+
+        Bindings.Actions.Delete.Element.setAttribute("disabled", true);
+        clearBinding(Bindings.Actions.Delete);
+        Bindings.Actions.Shuffle.Element.setAttribute("disabled", true);
+        clearBinding(Bindings.Actions.Shuffle);
+        Bindings.Actions.Submit.Element.setAttribute("disabled", true);
+        clearBinding(Bindings.Actions.Submit);
+      } else {
+        Bindings.Interactive.Center.Element.removeAttribute("disabled");
+        Bindings.Interactive.Letters.forEach(({ Element }) =>
+          Element.removeAttribute("disabled")
+        );
+        Bindings.Actions.Delete.Element.removeAttribute("disabled");
+        Bindings.Actions.Shuffle.Element.removeAttribute("disabled");
+        Bindings.Actions.Submit.Element.removeAttribute("disabled");
+
+        updateBinding(Bindings.Interactive.Center, () => {
           if (GameState.feedback) {
-            GameState.currentWord = letter;
+            GameState.currentWord = GameState.game.center;
             GameState.feedback = "";
           } else if (GameState.currentWord.length > 15) {
             GameState.feedback = "Word too long.";
           } else {
-            GameState.currentWord += letter;
+            GameState.currentWord += GameState.game.center;
           }
+          updateDisplayState();
+        });
+
+        for (const [index, letter] of GameState.game.letters
+          .split("")
+          .entries()) {
+          updateBinding(Bindings.Interactive.Letters[index], () => {
+            if (GameState.feedback) {
+              GameState.currentWord = letter;
+              GameState.feedback = "";
+            } else if (GameState.currentWord.length > 15) {
+              GameState.feedback = "Word too long.";
+            } else {
+              GameState.currentWord += letter;
+            }
+            updateDisplayState();
+          });
+        }
+
+        updateBinding(Bindings.Actions.Delete, () => {
+          if (GameState.feedback) {
+            GameState.currentWord = "";
+            GameState.feedback = "";
+          } else if (GameState.currentWord.length > 15) {
+            GameState.feedback = "Word too long.";
+          } else {
+            GameState.currentWord = GameState.currentWord.slice(0, -1);
+          }
+          updateDisplayState();
+        });
+
+        updateBinding(Bindings.Actions.Shuffle, () => {
+          Bindings.Interactive.Letters = Bindings.Interactive.Letters.map(
+            (value) => ({ value, sort: Math.random() })
+          )
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
+          updateDisplayState();
+        });
+
+        updateBinding(Bindings.Actions.Submit, () => {
+          const word = GameState.currentWord;
+
+          if (GameState.game.wordlist.includes(word)) {
+            if (GameState.words.includes(word)) {
+              GameState.feedback = "Word already found.";
+            } else {
+              const isPangram =
+                `${GameState.game.letters}${GameState.game.center}`
+                  .split("")
+                  .every((letter) => word.includes(letter));
+              const score =
+                Constants.Maps.WordLengthScoreMap[word.length] +
+                (isPangram ? 7 : 0);
+
+              GameState.score += score;
+              GameState.words.push(word);
+              GameState.words.sort();
+              GameState.feedback = `${
+                isPangram ? "Pangram!" : "Nice!"
+              } (${score} point${score === 1 ? "" : "s"})`;
+            }
+          } else {
+            if (word.length <= 3) {
+              GameState.feedback = "Word is too short.";
+            } else if (!word.includes(GameState.game.center)) {
+              GameState.feedback = "Center letter is missing.";
+            } else {
+              GameState.feedback = "Not a valid word.";
+            }
+          }
+
           updateDisplayState();
         });
       }
 
-      updateBinding(Bindings.Actions.Delete, () => {
-        if (GameState.feedback) {
-          GameState.currentWord = "";
-          GameState.feedback = "";
-        } else if (GameState.currentWord.length > 15) {
-          GameState.feedback = "Word too long.";
-        } else {
-          GameState.currentWord = GameState.currentWord.slice(0, -1);
-        }
-        updateDisplayState();
-      });
-
-      updateBinding(Bindings.Actions.Shuffle, () => {
-        Bindings.Interactive.Letters = Bindings.Interactive.Letters.map(
-          (value) => ({ value, sort: Math.random() })
-        )
-          .sort((a, b) => a.sort - b.sort)
-          .map(({ value }) => value);
-        updateDisplayState();
-      });
-
-      updateBinding(Bindings.Actions.Submit, () => {
-        const word = GameState.currentWord;
-
-        if (GameState.game.wordlist.includes(word)) {
-          if (GameState.words.includes(word)) {
-            GameState.feedback = "Word already found.";
-          } else {
-            const isPangram =
-              `${GameState.game.letters}${GameState.game.center}`
-                .split("")
-                .every((letter) => word.includes(letter));
-            const score =
-              Constants.Maps.WordLengthScoreMap[word.length] +
-              (isPangram ? 7 : 0);
-
-            GameState.score += score;
-            GameState.words.push(word);
-            GameState.words.sort();
-            GameState.feedback = `${
-              isPangram ? "Pangram!" : "Nice!"
-            } (${score} point${score === 1 ? "" : "s"})`;
+      if (AppState.currentGameKey === AppState.now || GameState.archived) {
+        Bindings.Control.ArchiveButton.Element.setAttribute("disabled", true);
+        clearBinding(Bindings.Control.ArchiveButton);
+      } else {
+        Bindings.Control.ArchiveButton.Element.removeAttribute("disabled");
+        updateBinding(Bindings.Control.ArchiveButton, () => {
+          if (
+            AppState.currentGameKey !== AppState.now &&
+            confirm(
+              `Archive game ${AppState.currentGameKey.replace(
+                "+",
+                " • "
+              )}? You'll see all the answers, but this can't be undone.`
+            )
+          ) {
+            archiveGame(AppState.currentGameKey);
           }
-        } else {
-          if (word.length <= 3) {
-            GameState.feedback = "Word is too short.";
-          } else if (!word.includes(GameState.game.center)) {
-            GameState.feedback = "Center letter is missing.";
-          } else {
-            GameState.feedback = "Not a valid word.";
-          }
-        }
-
-        updateDisplayState();
-      });
+        });
+      }
 
       Bindings.Dialogs.OverviewDialog.querySelectorAll(
         "button[data-game-key]"
@@ -1301,12 +1383,11 @@
 
           if (
             AppState.currentGameKey === key &&
-            AppState.currentGameKey !== AppState.now
+            AppState.currentGameKey !== AppState.now &&
+            confirm(`Delete game ${key.replace("+", " • ")}?`)
           ) {
-            if (confirm(`Delete game ${key.replace("+", " • ")}?`)) {
-              delete GameHistory[key];
-              switchGame(AppState.now);
-            }
+            delete GameHistory[key];
+            switchGame(AppState.now);
           } else {
             switchGame(key);
             Bindings.Dialogs.OverviewDialog.close();
@@ -1317,17 +1398,17 @@
 
     const updateControlButtonsOnce = () => {
       updateBinding(Bindings.Control.MoreButton, () => {
-        Bindings.Dialogs.MoreDialog.showModal();
+        if (GameState.archived) {
+          Bindings.Dialogs.ArchivedDialog.showModal();
+        } else {
+          Bindings.Dialogs.MoreDialog.showModal();
+        }
       });
       updateBinding(Bindings.Control.MoreCloseButton, () => {
         Bindings.Dialogs.MoreDialog.close();
       });
-
-      updateBinding(Bindings.Control.YesterdayButton, () => {
-        Bindings.Dialogs.YesterdayDialog.showModal();
-      });
-      updateBinding(Bindings.Control.YesterdayCloseButton, () => {
-        Bindings.Dialogs.YesterdayDialog.close();
+      updateBinding(Bindings.Control.ArchivedCloseButton, () => {
+        Bindings.Dialogs.ArchivedDialog.close();
       });
 
       updateBinding(Bindings.Control.OverviewButton, () => {
@@ -1346,6 +1427,12 @@
       await load();
 
       updateControlButtonsOnce();
+
+      Object.entries(GameHistory).forEach(([key, game]) => {
+        if (key !== AppState.now && !isNaN(key.charAt(0))) {
+          archiveGame(key);
+        }
+      });
 
       if ("serviceWorker" in navigator) {
         await navigator.serviceWorker.register("./sw.js", {
