@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#FFD339" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,6 +37,8 @@
       }
 
       body {
+        touch-action: none;
+        
         display: grid;
         place-content: center;
 
@@ -979,7 +981,7 @@
     };
 
     const load = async () => {
-      const now = new Date(Date.now() - 3 * 60 * 60 * 1000).toLocaleDateString(
+      AppState.now = new Date(Date.now() - 3 * 60 * 60 * 1000).toLocaleDateString(
         "en-CA"
       );
       const localDataString = window.localStorage.getItem("bee_History");
@@ -988,12 +990,12 @@
         GameHistory = JSON.parse(localDataString);
       }
 
-      if (!GameHistory[now]) {
+      if (!GameHistory[AppState.now]) {
         const response = await fetch(Constants.Api.Today);
         const game = await response.json();
 
-        GameHistory[now] = {
-          date: now,
+        GameHistory[AppState.now] = {
+          date: AppState.now,
           game,
           score: 0,
           currentWord: "",
@@ -1010,10 +1012,7 @@
         };
       }
 
-      Object.assign(AppState, {
-        now,
-      });
-      switchGame(now);
+      switchGame(AppState.now);
     };
 
     const save = async () => {
@@ -1226,14 +1225,14 @@
       save();
     };
 
-    const clearBinding = (binding) => {
+    const clearBinding = (binding, event = "pointerdown") => {
       binding.Element.removeEventListener("pointerdown", binding.Listener);
     };
 
-    const updateBinding = (binding, callback) => {
-      binding.Element.removeEventListener("pointerdown", binding.Listener);
+    const updateBinding = (binding, callback, event = "pointerdown") => {
+      binding.Element.removeEventListener(event, binding.Listener);
       binding.Listener = callback;
-      binding.Element.addEventListener("pointerdown", binding.Listener);
+      binding.Element.addEventListener(event, binding.Listener);
     };
 
     const updateButtonBindings = () => {
@@ -1357,7 +1356,7 @@
 
       if (AppState.currentGameKey === AppState.now || GameState.archived) {
         Bindings.Control.ArchiveButton.Element.setAttribute("disabled", true);
-        clearBinding(Bindings.Control.ArchiveButton);
+        clearBinding(Bindings.Control.ArchiveButton, "click");
       } else {
         Bindings.Control.ArchiveButton.Element.removeAttribute("disabled");
         updateBinding(Bindings.Control.ArchiveButton, () => {
@@ -1372,7 +1371,7 @@
           ) {
             archiveGame(AppState.currentGameKey);
           }
-        });
+        }, "click");
       }
 
       Bindings.Dialogs.OverviewDialog.querySelectorAll(
@@ -1403,24 +1402,24 @@
         } else {
           Bindings.Dialogs.MoreDialog.showModal();
         }
-      });
+      }, "click");
       updateBinding(Bindings.Control.MoreCloseButton, () => {
         Bindings.Dialogs.MoreDialog.close();
-      });
+      }, "click");
       updateBinding(Bindings.Control.ArchivedCloseButton, () => {
         Bindings.Dialogs.ArchivedDialog.close();
-      });
+      }, "click");
 
       updateBinding(Bindings.Control.OverviewButton, () => {
         Bindings.Dialogs.OverviewDialog.showModal();
-      });
+      }, "click");
       updateBinding(Bindings.Control.OverviewCloseButton, () => {
         Bindings.Dialogs.OverviewDialog.close();
-      });
+      }, "click");
       updateBinding(Bindings.Control.OverviewNewRandomGame, async () => {
         await loadRandom();
         Bindings.Dialogs.OverviewDialog.close();
-      });
+      }, "click");
     };
 
     const play = async () => {
