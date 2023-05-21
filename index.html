@@ -819,7 +819,7 @@
       currentGameKey: undefined,
     };
 
-    const GameDict = new Map();
+    let GameDict = undefined;
     let GameHistory = {};
     let GameState = {};
 
@@ -938,6 +938,10 @@
   </script>
   <script id="gamegen">
     const loadDict = async () => {
+      // only load the dictionary if it doesn't already exist
+      if (GameDict) return;
+      GameDict = new Map();
+
       const response = await fetch(Constants.Api.Dict);
       const dict = await response.text();
 
@@ -947,9 +951,9 @@
           .split("")
           .forEach((letter) => {
             if (GameDict.has(letter)) {
-              GameDict.get(letter).push(word);
+              GameDict.get(letter).add(word);
             } else {
-              GameDict.set(letter, [word]);
+              GameDict.set(letter, new Set([word]));
             }
           });
       });
@@ -1009,6 +1013,9 @@
     // deterministically generates a valid game given a seed
     const generateGame = async (seed) => {
       performance.mark("generate-start");
+
+      // only loads dictionary if it doesn't exist
+      await loadDict();
 
       let innerSeed = seed;
       let iterations = 0;
@@ -1588,7 +1595,6 @@
   </script>
   <script id="run">
     const play = async () => {
-      await loadDict();
       await load();
 
       updateControlButtonsOnce();
