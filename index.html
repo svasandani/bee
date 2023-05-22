@@ -780,6 +780,9 @@
       Api: {
         Dict: "/dict.txt",
       },
+      Gameplay: {
+        FeedbackTimeout: 2000,
+      },
       Maps: {
         CategoryPercentageMap: {
           Newbie: 0.0,
@@ -961,9 +964,6 @@
 
     // deterministically generates letters given a seed
     const generateLetters = async (seed) => {
-      if (!window.TextEncoder || !window.crypto?.subtle || !window.DataView)
-        throw new Error("A required API is missing.");
-
       const Letters = [
         "a",
         "e",
@@ -1027,6 +1027,7 @@
 
         let hasPangram = false;
         const game = {
+          seed,
           center,
           letters: letters.join(""),
           wordlist: [],
@@ -1087,11 +1088,13 @@
         throw new Error("Attempted to archive current game!");
 
       GameHistory[gameKey].archived = true;
+      GameHistory[gameKey].notify = undefined;
       GameHistory[gameKey].currentWord = "ARCHIVED";
       GameHistory[gameKey].feedback = "This game is archived.";
 
       updateDisplayState();
     };
+
     const switchGame = (gameKey) => {
       if (!(gameKey in GameHistory))
         throw new Error("Attempted to switch to nonexistent game!");
@@ -1101,7 +1104,7 @@
     };
 
     const loadRandom = async () => {
-      const game = await generateGame(Math.random().toFixed(50));
+      const game = await generateGame(crypto.randomUUID());
 
       const key = `${game.center}+${game.letters}`;
 
@@ -1414,11 +1417,22 @@
         Bindings.Actions.Submit.Element.removeAttribute("disabled");
 
         updateBinding(Bindings.Interactive.Center, () => {
-          if (GameState.feedback) {
+          if (GameState.notify) {
             GameState.currentWord = GameState.game.center;
             GameState.feedback = "";
+            GameState.notify = undefined;
           } else if (GameState.currentWord.length > 15) {
+            const key = crypto.randomUUID();
             GameState.feedback = "Word too long.";
+            GameState.notify = key;
+            setTimeout(() => {
+              if (GameState.notify === key) {
+                GameState.currentWord = "";
+                GameState.feedback = "";
+                GameState.notify = undefined;
+                updateDisplayState();
+              }
+            }, Constants.Gameplay.FeedbackTimeout);
           } else {
             GameState.currentWord += GameState.game.center;
           }
@@ -1429,11 +1443,22 @@
           .split("")
           .entries()) {
           updateBinding(Bindings.Interactive.Letters[index], () => {
-            if (GameState.feedback) {
+            if (GameState.notify) {
               GameState.currentWord = letter;
               GameState.feedback = "";
+              GameState.notify = undefined;
             } else if (GameState.currentWord.length > 15) {
+              const key = crypto.randomUUID();
               GameState.feedback = "Word too long.";
+              GameState.notify = key;
+              setTimeout(() => {
+                if (GameState.notify === key) {
+                  GameState.currentWord = "";
+                  GameState.feedback = "";
+                  GameState.notify = undefined;
+                  updateDisplayState();
+                }
+              }, Constants.Gameplay.FeedbackTimeout);
             } else {
               GameState.currentWord += letter;
             }
@@ -1442,11 +1467,10 @@
         }
 
         updateBinding(Bindings.Actions.Delete, () => {
-          if (GameState.feedback) {
+          if (GameState.notify) {
             GameState.currentWord = "";
             GameState.feedback = "";
-          } else if (GameState.currentWord.length > 15) {
-            GameState.feedback = "Word too long.";
+            GameState.notify = undefined;
           } else {
             GameState.currentWord = GameState.currentWord.slice(0, -1);
           }
@@ -1465,32 +1489,48 @@
         updateBinding(Bindings.Actions.Submit, () => {
           const word = GameState.currentWord;
 
-          if (GameState.game.wordlist.includes(word)) {
-            if (GameState.words.includes(word)) {
-              GameState.feedback = "Word already found.";
-            } else {
-              const isPangram = GameState.game.letters
-                .split("")
-                .every((letter) => word.includes(letter));
-              const score =
-                Constants.Maps.WordLengthScoreMap[word.length] +
-                (isPangram ? 7 : 0);
-
-              GameState.score += score;
-              GameState.words.push(word);
-              GameState.words.sort();
-              GameState.feedback = `${
-                isPangram ? "Pangram!" : "Nice!"
-              } (${score} point${score === 1 ? "" : "s"})`;
-            }
+          if (GameState.notify) {
+            GameState.currentWord = "";
+            GameState.feedback = "";
+            GameState.notify = undefined;
           } else {
-            if (word.length <= 3) {
-              GameState.feedback = "Word is too short.";
-            } else if (!word.includes(GameState.game.center)) {
-              GameState.feedback = "Center letter is missing.";
+            const key = crypto.randomUUID();
+            if (GameState.game.wordlist.includes(word)) {
+              if (GameState.words.includes(word)) {
+                GameState.feedback = "Word already found.";
+              } else {
+                const isPangram = GameState.game.letters
+                  .split("")
+                  .every((letter) => word.includes(letter));
+                const score =
+                  Constants.Maps.WordLengthScoreMap[word.length] +
+                  (isPangram ? 7 : 0);
+
+                GameState.score += score;
+                GameState.words.push(word);
+                GameState.words.sort();
+                GameState.feedback = `${
+                  isPangram ? "Pangram!" : "Nice!"
+                } (${score} point${score === 1 ? "" : "s"})`;
+              }
             } else {
-              GameState.feedback = "Not a valid word.";
+              if (word.length <= 3) {
+                GameState.feedback = "Word is too short.";
+              } else if (!word.includes(GameState.game.center)) {
+                GameState.feedback = "Center letter is missing.";
+              } else {
+                GameState.feedback = "Not a valid word.";
+              }
             }
+            GameState.notify = key;
+            setTimeout(() => {
+              if (GameState.notify === key) {
+                GameState.currentWord = "";
+                GameState.feedback = "";
+                GameState.notify = undefined;
+                updateDisplayState();
+              }
+            }, Constants.Gameplay.FeedbackTimeout);
           }
 
           updateDisplayState();
@@ -1595,6 +1635,14 @@
   </script>
   <script id="run">
     const play = async () => {
+      if (
+        !window.crypto ||
+        !window.crypto.subtle ||
+        !window.DataView ||
+        !window.TextEncoder
+      )
+        throw new Error("A required API is missing.");
+
       await load();
 
       updateControlButtonsOnce();
